@@ -1,0 +1,89 @@
+---
+title: "mapping"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# install.packages("mapview")
+# install.packages("sf")
+# install.packages("leaflet")
+# install.packages("OpenStreetMap")
+# install.packages(c("tidyveryse", "osmdata", "ggmap"))
+
+library(mapview)
+library(sf)
+library(leaflet)
+library(dplyr)
+library(OpenStreetMap)
+#library(tidyverse)
+library(osmdata)
+library(ggmap)
+```
+
+```{r}
+head(available_features())
+# View(available_features())
+#View(available_tags("name"))
+```
+
+```{r}
+query <- getbb("Louisiana") %>%
+                opq() %>%
+                add_osm_feature("shop", "supermarket")
+
+str(query) #query structure
+```
+
+```{r}
+supermarket <- osmdata_sf(query)
+supermarket
+```
+
+```{r}
+la_map <- get_map(getbb("Louisiana"), maptype = "hybrid")
+
+ggmap(la_map)+
+  geom_sf(data = supermarket$osm_points,
+          inherit.aes = FALSE,
+          colour = "red",
+          fill = "#004529",
+          alpha = .5,
+          size = 2,
+          shape = 20)+
+  labs(x = "Latitude", y = "Longitude")
+
+```
+
+```{r}
+ggplot()
+```
+
+
+```{r}
+#bounding box for the Iberian Peninsula
+m <- c(-50, 50, 50, 46)
+
+#building the query
+q <- m %>% 
+      opq (timeout = 25*100) %>%
+         add_osm_feature("name", "Walmart") %>%
+         add_osm_feature("shop", "supermarket")
+
+#query
+walmart <- osmdata_sf(q)
+
+#final map
+ggplot(data = la_map)+
+  geom_sf(data = walmart$osm_points,
+          colour = "#08519c",
+          fill = "#08306b",
+          alpha = .5,
+          size = 1,
+          shape = 21)+
+  theme_bw()
+```
+
