@@ -1,0 +1,72 @@
+---
+title: "random forest"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#packages required-- some may not work depending on version of R
+```{r}
+#install.packages(c("randomForest", "caTools", "DataExplorer", "lubridate", "pander", "data.table", "grid", "ranger"))
+
+library(randomForest)
+require(caTools)
+#library(tidyverse)
+#library(DataExplorer)
+library(lubridate)
+library(pander)
+library(data.table)
+library(grid)
+library(gridExtra)
+library(caret)
+library(ranger)
+library(ggplot2)
+```
+
+
+
+```{r}
+
+#set up control: cv, preds
+myControl <- trainControl(method ="repeatedcv", 
+                          number = 10,
+                          repeats = 3,
+                          savePredictions = "final",
+                          summaryFunction = defaultSummary,
+                          classProbs = FALSE,
+                          verboseIter = FALSE)
+set.seed(3001)
+
+#trying mtry 1-50
+myGrid <- expand.grid(.mtry = c(1:50)) 
+mod1<- train(adult_obesity_percent ~ . , 
+                    data = train,
+                    method = "rf",
+                    trControl = myControl,
+                    metric = "RMSE",
+                    tuneGrid = myGrid
+                )
+#display model
+mod1
+```
+
+
+get oob mse and follow this for best %incmse: https://stats.stackexchange.com/questions/162465/in-a-random-forest-is-larger-incmse-better-or-worse
+
+
+#get %incmse for variable importance
+```{r}
+#importance(mod1)
+#varImpPlot(mod1)
+set.seed(71)
+rf <-randomForest(adult_obesity_percent ~ . ,data = train, mtry=50, importance=TRUE,ntree=500)
+print(rf)
+#Evaluate variable importance
+#importance(rf)
+varImpPlot(rf)
+```
+
+
+

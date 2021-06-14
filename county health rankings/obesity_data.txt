@@ -1,0 +1,118 @@
+2016 - frequent physical distress, frequent mental distress??, insufficient sleep. added residential segregation (was there the 1st time)
+2015 - social association rate
+2014 - mental health, housing issues, drinking water violation, health care costs, access to health care, 
+children eligible for free lunch
+
+2020- reading scores, math scores: average grade performances
+
+add age-adjusted mortality? 2019 has it
+
+add mental health, some housing issues
+
+should I go back in years and get the over 65 and under 18 in demographics to have an age group
+
+questions?
+1. what is the food environment index: 
+The food environment index combines two measures of food access: the percentage of the population that is low-income and 
+has low access to a grocery store, and the percentage of the population that did not have access to a reliable source of 
+food during the past year (food insecurity).
+
+2. what's the segregation index
+3. how are the rankings calculated
+4. what's % receiving hba1c: HBA1c monitoring
+
+column combinations:
+1. PSED rate, some college % have been combined. Most of it is % some college. but b/c there is some psed, kept it as that.
+
+2. what to do for afgr and hs grad rate?
+
+4. length of life = mortality
+
+5. quality of life = morbidity
+
+6. there was only binge drinking in 2010. exessive dirnking started 2011 and binge drinking stopped 2012. 
+so do not pay attention to binge drinking. data from 2010 binge drinking will be put in for 2010. 
+
+
+
+train set is from 2010 to 2017
+test is form 2018 to 2020
+
+so model can't include things only introduced in 2018 to 2020. also need to be cautious of things included 
+later in the trainign set years. 
+
+so things that will definitely not be included in the model, and so that missing data doesn't have to dealt with:
+1. ypll_black/white/hispanic -- 2018
+2. life expectancy and life expectancy_black/white/hispanic -- 2019
+3. binge drinking -- stopped collection on 2012
+4. % receiving hba1c_black and white ---2018
+5. AFGR -- stopped in 2014
+6. income inequality GINI index (stopped 2011)
+7. % no emotion social support (stopped in 2015)
+8. % access to healthy food (stopped in 2013)
+9. % fast food (stopped in 2014)
+10. access rec facility (stopped in 2014)
+11. park access (stopped in 2014)
+12. liquor store density (stopped 2012)
+
+dependent variable: adult_obesity_percent
+included in model (predictors):
+1. food env index started 2014. keeping it
+2. health outcomes rank
+3. health factors rank
+4. life length rank
+5. life quality rank
+6. health behaviour rank
+7. clinical care rank
+8. socio-econ rank
+9. physical env rank
+10. premature death ypll rate (not including premature deaths)
+11. poor or fair health %
+12. avg poor physical health days
+13. adult smoking %
+14. excessive drinking %
+15. uninsured %
+16. % diabetes (not including # of diabetics)
+17. % receiving HBA1c monitoring (stoppped in 2019)
+18. HS grade rate (started 2014)
+19. PSED/college grad rate (mixed these together) PSED completion rate
+20. unemployed %
+21. income inequality income ratio (started 2015)
+22. % limited healthy food access (started 2012)
+23. % food insecure (started 2014)
+24. % access to exercise opportunities (started 2014)
+25. physical inactivity % (started 2011)
+26. median household income (started 2011)
+27. all racial info --6 races (started 2011) [non hispanic white started 2013]
+28. not english proficient (started 2011)
+29. female (started 2011)
+30. rural (started 2011)
+31. County
+
+on the fence:
+residential segregation index (started 2016)
+(do plots on this)
+
+plots and correlations to see:
+histogram: obesity
+
+smoking and obesity
+drinking and obesity
+
+smoking and drinking
+
+uninsured and obesity
+
+diabetes % and obesity
+
+% recieving hba1c and obesity
+
+
+
+should indexes like food_env_index be treated as ranka nd standardized as such?
+
+
+
+
+
+

@@ -1,0 +1,477 @@
+---
+title: "model county exploration"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+```
+
+
+Assumption, Cameron, East Faleciana, Iberville, La Salle, Red
+River, and West Baton Rouge counties.
+
+Other features: health factors rank, life quality rank. health be-
+havior rank, adult smoking %, food environment index, percentage of uninsured
+people, rate of completion for post-secondary education, percentage of diabetic people
+
+Predictor: adult_obesity_percent
+
+Use the obesity data set
+
+```{r}
+imp_features <- c("County_name", "Year", "hispanic_percent", "african_american_percent", "nonhispanic_white_percent","rural","female","health_factors_rank", "life_quality_rank", "health_behav_rank", "adult_smoking_percent", "adult_obesity_percent","food_env_index", "uninsured_percent", "PSED_completion_rate", "diabetic_percent")
+
+counties <- c("Assumption", "Cameron", "East Feliciana","Iberville",  "La Salle", "Red River", "West Baton Rouge")
+```
+
+Assumption, Cameron, East Faleciana, Iberville, La Salle, Red
+River, and West Baton Rouge
+
+create separate data sets for each county
+
+```{r}
+assumption <- obesity[imp_features] %>%
+  filter(County_name == "Assumption")
+
+cameron <- obesity[imp_features] %>%
+  filter(County_name == "Cameron")
+
+east_faleciana <- obesity[imp_features] %>%
+  filter(County_name == "East Feliciana")
+
+iberville <- obesity[imp_features] %>%
+  filter(County_name == "Iberville")
+
+la_salle <- obesity[imp_features] %>%
+  filter(County_name == "La Salle")
+
+red_river <- obesity[imp_features] %>%
+  filter(County_name == "Red River")
+
+west_b_rouge <- obesity[imp_features] %>%
+  filter(County_name == "West Baton Rouge")
+
+imp_counties <- obesity[imp_features] %>%
+  filter(County_name %in% counties)
+
+nrow(imp_counties)
+
+```
+
+
+how obesity and smoking interact in the 7 counties
+```{r}
+ggplot(imp_counties, aes(adult_smoking_percent, adult_obesity_percent, color = factor(Year))) + 
+  geom_point() +
+  geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(adult_smoking_percent, adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_smooth(method = "loess")
+```
+
+Other features: health factors rank, life quality rank. health be-
+havior rank, adult smoking %, food environment index, percentage of uninsured
+people, rate of completion for post-secondary education, percentage of diabetic people
+
+Predictor: adult_obesity_percent
+
+getting avergages for the non county variables, for each county
+```{r}
+counties <- group_by(imp_counties, County_name)
+avg_smoking <- summarize(counties,avg= mean(adult_smoking_percent,na.rm=TRUE))
+avg_obesity <- summarize(counties,avg= mean(adult_obesity_percent,na.rm=TRUE))
+avg_food_index <- summarize(counties,avg= mean(food_env_index,na.rm=TRUE))
+avg_uninsured <- summarize(counties,avg= mean(uninsured_percent,na.rm=TRUE))
+avg_psed <- summarize(counties,avg= mean(PSED_completion_rate,na.rm=TRUE))
+avg_diabetic <- summarize(counties,avg= mean(diabetic_percent,na.rm=TRUE))
+
+avg_obesity
+avg_smoking
+avg_food_index
+avg_uninsured
+avg_psed
+avg_diabetic
+```
+
+
+plots for all the non rank variables, including dependent variable
+```{r}
+ggplot(imp_counties, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in adult obesity from 2010 to 2020", x = "Year", y = "Adult obesity %") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change % of uninsured people", x = "Year", y = "Uninsured %") 
+  #geom_smooth(method = "loess")
+```
+
+The food environment index combines two measures of food access: the percentage of the population that is low-income and has low access to a grocery store, and the percentage of the population that did not have access to a reliable source of food during the past year (food insecurity).
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change % of uninsured people", x = "Year", y = "Uninsured %") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in PSED completion rate", x = "Year", y = "PSED completion rate") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change % of uninsured people", x = "Year", y = "Uninsured %") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in % of diabetic people", x = "Year", y = "% of diabetic people") 
+  #geom_smooth(method = "loess")
+```
+
+health factors rank, life quality rank. health behavior rank
+
+"health_factors_rank", "life_quality_rank", "health_behav_rank"
+
+plots for ranked variables
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), health_factors_rank, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in health factors ranks", x = "Year", y = "Health factors rank") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), life_quality_rank, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in life quality ranks", x = "Year", y = "Life quality rank") 
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), health_behav_rank, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))+
+  labs(title ="Change in health behavior ranks", x = "Year", y = "Health behavior rank") 
+  #geom_smooth(method = "loess")
+```
+
+
+plots for racial demographics
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), african_american_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), hispanic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess")
+```
+
+```{r}
+ggplot(imp_counties, aes(factor(Year), nonhispanic_white_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess")
+```
+
+
+
+*****************************Individual plots**********************************************************************
+
+change in obesity over time
+```{r}
+a <- ggplot(red_river, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b <- ggplot(cameron, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c <- ggplot(assumption, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d <- ggplot(east_faleciana, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e <- ggplot(iberville, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f <- ggplot(la_salle, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g <- ggplot(west_b_rouge, aes(factor(Year), adult_obesity_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_obesity <- grid.arrange(a, b, c, d, e, f, g, nrow = 4, ncol = 2)
+all_obesity
+```
+
+
+change in smoking over time
+```{r}
+a1 <- ggplot(red_river, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b1 <- ggplot(cameron, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c1 <- ggplot(assumption, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d1 <- ggplot(east_faleciana, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e1 <- ggplot(iberville, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f1 <- ggplot(la_salle, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g1 <- ggplot(west_b_rouge, aes(factor(Year), adult_smoking_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_smoking <- grid.arrange(a1, b1, c1, d1, e1, f1, g1, nrow = 4, ncol = 2)
+all_smoking
+```
+
+avg_food_index <- summarize(counties,avg= mean(food_env_index,na.rm=TRUE))
+avg_uninsured <- summarize(counties,avg= mean(uninsured_percent,na.rm=TRUE))
+avg_psed <- summarize(counties,avg= mean(PSED_completion_rate,na.rm=TRUE))
+avg_diabetic <- summarize(counties,avg= mean(diabetic_percent,na.rm=TRUE))
+
+change in food environment index over time
+```{r}
+a2 <- ggplot(red_river, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b2 <- ggplot(cameron, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c2 <- ggplot(assumption, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d2 <- ggplot(east_faleciana, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e2 <- ggplot(iberville, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f2 <- ggplot(la_salle, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g2 <- ggplot(west_b_rouge, aes(factor(Year), food_env_index, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_foodenvindex <- grid.arrange(a2, b2, c2, d2, e2, f2, g2, nrow = 4, ncol = 2)
+all_foodenvindex
+```
+
+change in uninsured people over time
+```{r}
+a3 <- ggplot(red_river, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b3 <- ggplot(cameron, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c3 <- ggplot(assumption, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d3 <- ggplot(east_faleciana, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e3 <- ggplot(iberville, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f3 <- ggplot(la_salle, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g3 <- ggplot(west_b_rouge, aes(factor(Year), uninsured_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_uninsured <- grid.arrange(a3, b3, c3, d3, e3, f3, g3, nrow = 4, ncol = 2)
+all_uninsured
+```
+
+change in PSED completion over time
+```{r}
+a4 <- ggplot(red_river, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b4 <- ggplot(cameron, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c4 <- ggplot(assumption, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d4 <- ggplot(east_faleciana, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e4 <- ggplot(iberville, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f4 <- ggplot(la_salle, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g4 <- ggplot(west_b_rouge, aes(factor(Year), PSED_completion_rate, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_psed <- grid.arrange(a4, b4, c4, d4, e4, f4, g4, nrow = 4, ncol = 2)
+all_psed
+```
+
+change in diabetes prevalence over time
+```{r}
+a5 <- ggplot(red_river, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+
+b5 <- ggplot(cameron, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+c5 <- ggplot(assumption, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+d5 <- ggplot(east_faleciana, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+   geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+e5 <- ggplot(iberville, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+f5 <- ggplot(la_salle, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+g5 <- ggplot(west_b_rouge, aes(factor(Year), diabetic_percent, color = factor(County_name))) + 
+  geom_point() +
+  geom_line(aes(group = factor(County_name)))
+  #geom_smooth(method = "loess", formula = "y~x")
+
+all_diabetic <- grid.arrange(a5, b5, c5, d5, e5, f5, g5, nrow = 4, ncol = 2)
+all_diabetic
+```
+
+
+

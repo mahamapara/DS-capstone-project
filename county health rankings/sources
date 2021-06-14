@@ -1,0 +1,66 @@
+
+Outlier detection:
+https://www.statsandr.com/blog/outliers-detection-in-r/
+
+http://r-statistics.co/Outlier-Treatment-With-R.html
+
+
+Missing data:
+
+Categorical data:
+
+Feature scaling:
+
+normalization: https://medium.com/swlh/data-normalisation-with-r-6ef1d1947970
+standardization: https://datascience.stackexchange.com/questions/1240/methods-for-standardizing-normalizing-different-rank-scales
+https://www.youtube.com/watch?v=IHjro2qZtog
+
+https://datasharkie.com/how-to-standardize-data-in-r/
+
+data merge:
+https://www.datasciencemadesimple.com/join-in-r-merge-in-r/#:~:text=We%20can%20merge%20two%20data,database%20join%20operation%20in%20SQL.
+
+
+write csv: 
+https://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/R/R-Manual/R-Manual5.html
+
+convert data type:
+https://www.tutorialspoint.com/how-to-convert-more-than-one-column-in-r-data-frame-to-from-integer-to-numeric-in-a-single-line-code#:~:text=To%20convert%20columns%20of%20an,type%20into%20numeric%20data%20type.
+
+Feature extraction/selection:
+https://machinelearningmastery.com/feature-selection-with-the-caret-r-package/
+
+Fetaure engineering:
+https://www.datavedas.com/feature-engineering-in-r/#:~:text=Feature%20Engineering%20is%20a,fit%20for%20different%20learning%20algorithms.
+
+https://topepo.github.io/caret/variable-importance.html
+
+
+predict(dummies, newdata = etitanic)
+
+dummy coding:
+https://www.marsja.se/create-dummy-variables-in-r/#Dummy_Coding
+
+https://amunategui.github.io/dummyVar-Walkthrough/
+
+
+rf:
+https://cran.r-project.org/web/packages/caret/vignettes/caret.html
+
+https://www.listendata.com/2014/11/random-forest-with-r.html#Methods-to-find-Best-Split
+
+on %IncMSE: https://stats.stackexchange.com/questions/162465/in-a-random-forest-is-larger-incmse-better-or-worse
+
+get oob mse: https://stats.stackexchange.com/questions/369134/random-forest-out-of-bag-rmse
+
+mse and oob: https://stats.stackexchange.com/questions/184222/calculate-mse-for-random-forest-in-r-using-package-randomforest
+
+
+https://stats.stackexchange.com/questions/111968/random-forest-how-to-handle-overfitting
+
+https://www.researchgate.net/figure/Mean-Decrease-Accuracy-IncMSE-and-Mean-Decrease-Gini-IncNodePurity-sorted_fig9_23283222
+
+
+to update:
+require(installr)
+updateR()

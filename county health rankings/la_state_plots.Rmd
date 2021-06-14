@@ -1,0 +1,79 @@
+---
+title: "obesity data
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(gridExtra)
+#install.packages("GGally")
+library(GGally)
+```
+
+read in data
+```{r}
+data_obesity <- read_csv("data_obesity.csv")
+```
+
+filter to data set with only LA states averages
+```{r}
+state <- data_obesity %>% 
+  filter(data_obesity$FIPS == 22000)
+```
+
+```{r}
+dim(state)
+```
+
+remove these columns
+```{r}
+state <- subset(state, select = -c(health_outcomes_rank, health_factors_rank, mortality_rank, morbidity_rank, life_length_rank, life_quality_rank, health_behav_rank, clinical_care_rank, socio_econ_fact_rank, physical_env_rank, ypll_black, ypll_hispanic, ypll_white, life_expectancy_black, life_expectancy_white, life_expectancy_hispanic, percent_receiving_hba1c_black, percent_receiving_hba1c_white, income_inequality_GINI, X68, X69, X70, X71, X72))
+```
+
+```{r}
+dim(state)
+```
+
+```{r}
+str(state)
+```
+
+make year a character
+```{r}
+state$Year <- as.character(state$Year)
+```
+
+
+longitudinal plots
+
+```{r}
+ggplot(state, aes(Year, premature_death_ypll_rate))  +
+  geom_point(aes(color = "red")) +
+  geom_line(aes(group = 1, color = "blue")) 
+```
+
+```{r}
+ggplot(state, aes(Year, poor_or_fair_health_percent))  +
+  geom_point(aes(color = "red")) +
+  geom_line(aes(group = 1, color = "blue")) 
+```
+
+```{r}
+ggplot(state, aes(Year, poor_physical_health_days_avg)) +
+  geom_point(aes(color = "red")) +
+  geom_line(aes(group = 1, color = "blue")) 
+```
+
+```{r}
+ggplot(state, aes(Year, poor_physical_health_days_avg)) +
+  geom_point(aes(color = "red")) +
+  geom_line(aes(group = 1, color = "blue")) 
+```
+

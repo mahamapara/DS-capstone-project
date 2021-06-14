@@ -1,0 +1,112 @@
+---
+title: "multiple linear regression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(caret)
+
+data_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+
+```
+
+#train model with all variables
+```{r}
+
+all_model <- train(adult_obesity_percent ~ . , 
+                     data = train,                        
+                     trControl = data_ctrl,              # folds
+                     method = "lm",                      # specifying regression model
+                     na.action = na.pass)                # pass missing data to model - some models will handle this
+```
+
+evaluate all_model
+
+```{r}
+all_model$finalModel
+```
+
+```{r}
+summary(all_model)
+```
+
+```{r}
+all_model$resample
+```
+
+```{r}
+all_model
+```
+
+```{r}
+sd(all_model$resample$Rsquared)
+```
+
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+#train 2nd model- remove non-sig predictors from mod 1
+
+```{r}
+smaller_model <- train(adult_obesity_percent ~ health_factors_rank + life_quality_rank + health_behav_rank + adult_smoking_percent + food_env_index + uninsured_percent + PSED_completion_rate + diabetic_percent + County_4 + County_12 + County_19 + County_24 + County_30 + County_41 + County_57 + County_61, 
+                     data = train,                        
+                     trControl = data_ctrl,              # folds
+                     method = "lm")                # pass missing data to model - some models will handle this
+```
+
+```{r}
+smaller_model
+```
+
+```{r}
+summary(smaller_model)
+```
+
+```{r}
+smaller_model$resample
+```
+
+Model 3: with 15 predictors, removing non sig variable from model 2
+
+remove county_57
+```{r}
+small_model <- train(adult_obesity_percent ~ health_factors_rank + life_quality_rank + health_behav_rank + adult_smoking_percent + food_env_index + uninsured_percent + PSED_completion_rate + diabetic_percent + County_4 + County_12 + County_19 + County_24 + County_30 + County_41 + County_61, 
+                     data = train,                        
+                     trControl = data_ctrl,              # folds
+                     method = "lm")                # pass missing data to model - some models will handle this
+```
+
+```{r}
+
+small_model
+```
+
+```{r}
+summary(small_model)
+```
+
+```{r}
+small_model$resample
+```
+
+
+
+all RMSE's, R squared together
+
+```{r}
+all_model #best R-squared and RMSE
+smaller_model
+small_model
+```
+
+Prediction on model 1
+
+```{r}
+allMod_pred <- predict(all_model, test)
+
+postResample(pred = allMod_pred, obs = test$adult_obesity_percent)
+```
+

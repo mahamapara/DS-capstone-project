@@ -1,0 +1,419 @@
+---
+title: "data pre-processing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#packages required
+
+```{r}
+#install.packages("gridExtra")
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(gridExtra)
+#install.packages("GGally")
+library(GGally)
+#install.packages("caret")
+library(caret)
+
+#install.packages("Rtools")
+#library(Rtools)
+```
+
+read in data
+```{r}
+data_obesity <- read_csv("data_obesity.csv")
+```
+
+#remove columns below
+```{r}
+data_obesity <- subset(data_obesity, select = -c(X68, X69, X70, X71, X72))
+data_obesity <- subset(data_obesity, select = -c(Year_1))
+
+```
+
+#remove rows where county is na
+```{r}
+obesity <- data_obesity %>%
+  drop_na(County)
+```
+
+
+```{r}
+str(obesity)
+```
+
+```{r}
+summary(obesity)
+```
+
+
+
+dealing with missing data
+```{r}
+sum(is.na(obesity)) #14570
+
+#gives sum of na for all columns 
+obesity %>%
+  summarise_all(funs(sum(is.na(.))))
+
+#thoughts: most of the variables that will go in the model won't have a lot of NAs. This is because all the ones chosen for the big model are chosen based on when they were introduced. Can't do anything about those NAs tbh because replacing them with something else won't reflect the reality of the data at that time period. 
+
+```
+
+
+dealing with categorical data: county
+
+```{r}
+#dupicating the county column
+obesity %>% 
+  mutate(County_name = County)
+
+#change county column to a factor
+obesity$County <- as.numeric(factor(obesity$County))
+```
+
+
+looking for outliers-- univariate approach
+```{r}
+ggplot(obesity, aes(x = adult_obesity_percent))+ 
+  geom_histogram() +
+  stat_bin(bins = 20, binwidth = 1) +
+  geom_vline(aes(xintercept=mean(adult_obesity_percent)),
+            color="blue", linetype="dashed", size=1)
+```
+
+```{r}
+boxplot(obesity$adult_obesity_percent,
+  ylab = "adult_obesity_percent"
+)
+```
+
+
+extract value of outliers based on the IQR criterion
+```{r}
+boxplot.stats(obesity$adult_obesity_percent)$out
+```
+
+use which() function to extract the row number corresponding to these outliers
+```{r}
+out <- boxplot.stats(obesity$adult_obesity_percent)$out
+out_ind <- which(obesity$adult_obesity_percent %in% c(out))
+out_ind
+
+```
+
+now easily go back to the specific rows in the dataset to verify them, or print all variables for these outliers:
+```{r}
+obesity[out_ind, ]
+```
+
+formal techniques to test for outliers: 2 statistical tests- grubb's (only one outlier at a time) and rosner (good for data sets with n> 25 and more than one outlier)
+
+Grubb's test: allows to detect whether the highest or lowest value in a dataset is an outlier
+```{r}
+library(outliers)
+
+# for lowest value
+grubb_test <- grubbs.test(obesity$adult_obesity_percent)
+grubb_test
+```
+
+```{r}
+# for highest value
+grubb_test <- grubbs.test(obesity$adult_obesity_percent, opposite = TRUE)
+grubb_test
+```
+
+Rosner's test
+```{r}
+library(EnvStats)
+
+rosner_test <- rosnerTest(obesity$adult_obesity_percent,
+  k = 5 #no. of suspected outliers
+)
+rosner_test
+```
+
+
+
+multivariate outlier detection approach-- using cook's distance
+```{r}
+vars <- c("County", "rural", "african_american_percent", "american_indian_percent", "asian_percent", "pacific_islander_percent", "hispanic_percent", "nonhispanic_white_percent", "not_eng_prof_percent", "female", "health_outcomes_rank", "health_factors_rank", "life_length_rank", "life_quality_rank", "health_behav_rank", "clinical_care_rank", "socio_econ_fact_rank", "physical_env_rank", "premature_death_ypll_rate ", "poor_or_fair_health_percent", "poor_physical_health_days_avg", "adult_smoking_percent", "excessive_drinking_percent", "adult_obesity_percent", "food_env_index", "diabetic_percent", "percent_receiving_hba1c", " percent_limited_access_healthy_food_access", "percent_food_insecure", "access_exercise_opp_percent", "physical_inactivity_percent", "hs_grad_rate", "PSED_completion_rate", "uninsured_percent", "unemployed_percent", "income_ineq_income_ratio", "median_household_income")
+
+obs_mod <- obesity[, (colnames(obesity) %in% vars)]
+```
+
+```{r}
+mod <- lm(adult_obesity_percent ~ ., data= obs_mod)
+cooksd <- cooks.distance(mod)
+```
+
+```{r}
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
+```
+
+```{r}
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])  # influential row numbers
+head(obs_mod[influential, ])  # influential observations.
+```
+
+Decision is to not remove any suspected outliers because each row is the value for a county and we expect there to be large variation between county ranks, demographics etc. 
+
+
+
+normalize/standardize/scale the features
+```{r}
+#some plots before normalization etc
+smoking <- ggplot(obesity, aes(adult_smoking_percent,adult_obesity_percent)) +
+              geom_point()
+
+alcohol <- ggplot(obesity, aes(excessive_drinking_percent,adult_obesity_percent)) +
+              geom_point()
+
+uninsured <- ggplot(obesity, aes(uninsured_percent,adult_obesity_percent)) +
+              geom_point()
+
+diabetes <- ggplot(obesity, aes(diabetic_percent, adult_obesity_percent)) +
+              geom_point()
+
+ypll <- ggplot(obesity, aes(premature_death_ypll_rate,adult_obesity_percent)) +
+              geom_point()
+
+income <- ggplot(obesity, aes(median_household_income,adult_obesity_percent)) +
+              geom_point()
+
+food_env <- ggplot(obesity, aes(food_env_index,adult_obesity_percent)) +
+              geom_point()
+
+grid.arrange(smoking, alcohol, uninsured, diabetes, ypll, income, food_env, nrow = 3, ncol = 3)
+```
+
+```{r}
+#duplicate data set
+obesity_norm <- data.frame(obesity)
+
+#check it occupies a different memory location and hence doesn't point to the original data frame.
+tracemem(obesity_norm)==tracemem(obesity)
+```
+
+standardization function
+```{r}
+standardize <- function(x){
+  return((x - mean(x, na.rm = TRUE))/(sd(x, na.rm = TRUE)))
+}
+```
+
+```{r}
+#to get index of each column
+data.frame(colnames(obs_mod))
+```
+
+stnadardize non rank columns
+```{r}
+obesity_standardize <- as.data.frame(apply(obs_mod[10:35],2,standardize)) #has all the non rank columns
+
+```
+
+standardize rank columns
+```{r}
+rank_standardize <- function(x){
+  main = (x - min(x))/(max(x) - min(x))
+  return((9*main) + 1)
+}
+
+#source: https://datascience.stackexchange.com/questions/1240/methods-for-standardizing-normalizing-different-rank-scales
+```
+
+```{r}
+obesity_rank_standardize <- as.data.frame(apply(obs_mod[2:9],2,rank_standardize))
+```
+
+check before adding county
+```{r}
+dim(obesity_standardize)#704 26
+dim(obesity_rank_standardize)#704 8
+```
+
+
+join all the standardized data: rank standardized, non rank standardized, and the county variable
+```{r}
+#add county to both standardized datasets:
+obesity_standardize <- cbind(obesity_standardize, County = obs_mod$County)
+obesity_rank_standardize <- cbind(obesity_rank_standardize, County = obs_mod$County)
+
+#to confirm that county was added
+dim(obesity_standardize)#704 27
+dim(obesity_rank_standardize)#704 9
+
+#View(obesity_rank_standardize)
+#View(obesity_standardize)
+```
+
+cannot figure this out for the life of me:
+```{r}
+#full outer join on both the standardized datasets
+obesity_all_stan <- merge(x = obesity_rank_standardize, y = obesity_standardize, by="County")#, all=TRUE)
+
+#obesity_all_stan <- obesity_rank_standardize %>% 
+ # inner_join(obesity_standardize, by="County")
+
+#obesity_all_stan <- obesity_all_stan  %>% 
+ # distinct(health_outcomes_rank, .keep_all = TRUE)
+
+dim(obesity_all_stan) #704 35
+
+```
+
+for some reason I have 11 times the rows I did first. Each county hould have 11 entries and as there are 64 counties I should have 64*11 = 704 rows. But here there are 704*11 = 7744 rows. 
+Each county appears a 121 times when it should appear 11 times. so it appears 11 times more than it should
+
+
+
+New plan: export the standardized datasets from R and join them in excel
+```{r}
+write.csv(obesity_rank_standardize,'obesity_rank_standardize.csv')
+write.csv(obesity_standardize,'obesity_standardize.csv')
+```
+
+```{r}
+library(readxl)
+obs_stan_all_use <- read_excel("obs_stan_all_use.xlsx")
+#View(obs_stan_all_use)
+
+#NA seen as character/string so wanted to make it this
+obs_stan_all_use[obs_stan_all_use == "NA"] <- NA
+
+#still the variables with NA are seen as characters
+str(obs_stan_all_use)
+
+#make it a dataframe
+obs_stan_all_use <- as.data.frame(obs_stan_all_use)
+```
+
+```{r}
+#made all the columns in the dataframe numeric
+obs_stan_all_use <− lapply(obs_stan_all_use, as.numeric)
+str(obs_stan_all_use)
+```
+make county a factor
+```{r}
+#county is a factor and should be treated as such
+obs_stan_all_use$County <- as.factor(obs_stan_all_use$County)
+
+str(obs_stan_all_use)
+```
+
+make dummy variables of county
+```{r}
+#install.packages("fastDummies")
+library(fastDummies)
+
+obs_stan_all_use <- dummy_cols(obs_stan_all_use, select_columns = 'County')
+
+dim(obs_stan_all_use) #35 originally, 64 added, one for each county
+```
+
+```{r}
+#remove the County variable
+obs_stan_all_use <- subset(obs_stan_all_use, select= -c(County))
+
+dim(obs_stan_all_use)#to confirm if column was removed
+```
+
+
+feature selection
+
+```{r}
+#for index
+data.frame(colnames(obs_stan_all_use))
+```
+
+```{r}
+#remove redundant features: remove attributes with an absolute correlation of 0.75 or higher
+
+set.seed(5968)
+
+install.packages("mlbench")
+library(mlbench)
+library(caret)
+
+correlationMatrix <- cor(obs_stan_all_use[,1:34])
+# summarize the correlation matrix
+print(correlationMatrix)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+# print indexes of highly correlated attributes
+print(highlyCorrelated)
+```
+
+so index 2, 1, 7, 4 ,5 are highly correlated at cutoff 0.5
+2, 1 are highly correlated at 0.75
+
+remove health_outcomes_rank
+```{r}
+obs_stan_all_use <- subset(obs_stan_all_use, select= -c(health_outcomes_rank))
+
+dim(obs_stan_all_use)#to confirm if column was removed
+```
+
+```{r}
+correlationMatrix <- cor(obs_stan_all_use[,1:97])
+# summarize the correlation matrix
+print(correlationMatrix)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+# print indexes of highly correlated attributes
+print(highlyCorrelated)
+```
+1, 20 and 25 are highly correlated at 0.75. That's health_factors_rank, percent_food_insecure, african_american_percent. let it stay for now
+
+```{r}
+sum(is.na(obs_stan_all_use))
+```
+
+```{r}
+summary(obs_stan_all_use)
+```
+
+replace all NAs with 0-- b/c it doesn't mean anything in the scaled data
+```{r}
+obs_stan_all_use[is.na(obs_stan_all_use)] <- 0
+sum(is.na(obs_stan_all_use))#to confirm if all NAs were replaced
+```
+
+
+note: my current method disregards the year. so right now I will do it by 80/20 and later think about the years
+
+splitting the data
+```{r}
+set.seed(78965)
+#train <- obs_stan_all_use %>%
+ # filter(Year %in% c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"))
+
+#test  <- obs_stan_all_use %>%
+ # filter(Year %in% c("2018", "2019", "2020"))
+
+set.seed(3456)
+trainIndex <- createDataPartition(obs_stan_all_use$adult_obesity_percent, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+
+train <- obs_stan_all_use[ trainIndex,]
+test  <- obs_stan_all_use[-trainIndex,]
+```
+
+```{r}
+dim(train)#512 rows
+dim(test)#192 rows
+```
+
+

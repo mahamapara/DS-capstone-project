@@ -1,0 +1,96 @@
+---
+title: "exploration_county"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+```
+
+#obesity vs some variables from data
+
+```{r}
+smoking <- ggplot(obesity, aes(adult_smoking_percent,adult_obesity_percent)) +
+              geom_point()
+
+alcohol <- ggplot(obesity, aes(excessive_drinking_percent,adult_obesity_percent)) +
+              geom_point()
+
+uninsured <- ggplot(obesity, aes(uninsured_percent,adult_obesity_percent)) +
+              geom_point()
+
+diabetes <- ggplot(obesity, aes(diabetic_percent, adult_obesity_percent)) +
+              geom_point()
+
+ypll <- ggplot(obesity, aes(premature_death_ypll_rate,adult_obesity_percent)) +
+              geom_point()
+
+income <- ggplot(obesity, aes(median_household_income,adult_obesity_percent)) +
+              geom_point()
+
+food_env <- ggplot(obesity, aes(food_env_index,adult_obesity_percent)) +
+              geom_point()
+
+grid.arrange(smoking, alcohol, uninsured, diabetes, ypll, income, food_env, nrow = 3, ncol = 3)
+```
+
+same plots as above but using standardized data
+```{r}
+smoking <- ggplot(obs_stan_all_use, aes(adult_smoking_percent,adult_obesity_percent)) +
+              geom_point()
+
+alcohol <- ggplot(obs_stan_all_use, aes(excessive_drinking_percent,adult_obesity_percent)) +
+              geom_point()
+
+uninsured <- ggplot(obs_stan_all_use, aes(uninsured_percent,adult_obesity_percent)) +
+              geom_point()
+
+diabetes <- ggplot(obs_stan_all_use, aes(diabetic_percent, adult_obesity_percent)) +
+              geom_point()
+
+#ypll <- ggplot(obs_stan_all_use, aes(premature_death_ypll_rate,adult_obesity_percent)) +
+ #             geom_point()
+
+income <- ggplot(obs_stan_all_use, aes(median_household_income,adult_obesity_percent)) +
+              geom_point()
+
+food_env <- ggplot(obs_stan_all_use, aes(food_env_index,adult_obesity_percent)) +
+              geom_point()
+
+grid.arrange(smoking, alcohol, uninsured, diabetes, income, food_env, nrow = 3, ncol = 3)
+```
+
+pre-standardization data exploration
+```{r}
+pre <- ggplot(obesity, aes(x = adult_obesity_percent))+ 
+        geom_histogram() +
+        stat_bin(bins = 50, binwidth = 1) +
+        geom_vline(aes(xintercept=mean(adult_obesity_percent)),
+              color="blue", linetype="dashed", size=1)
+
+post <- ggplot(obs_stan_all_use, aes(x = adult_obesity_percent))+ 
+        geom_histogram() +
+        stat_bin(bins = 50, binwidth = 1) +
+        geom_vline(aes(xintercept=mean(adult_obesity_percent)),
+              color="blue", linetype="dashed", size=1)
+
+grid.arrange(pre, post, nrow = 1, ncol = 2)
+```
+
+```{r}
+ggplot(obesity, aes(diabetic_percent,adult_obesity_percent)) +
+              geom_point(aes(color = rural))
+```
+
+```{r}
+data.frame(colnames(obesity))
+```
+
+
+
