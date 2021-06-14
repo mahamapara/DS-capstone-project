@@ -1,0 +1,631 @@
+---
+title: "data exploration-food acces"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+packages needed
+```{r}
+#library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(naniar)
+```
+
+read in the data
+```{r}
+library(readr)
+food <- read_csv("Food Access Research Atlas.csv")
+#View(food)
+```
+
+```{r}
+dim(food)
+```
+
+only for LA
+```{r}
+food_la <- food %>%
+  filter(food$State == "Louisiana" )
+```
+
+
+```{r}
+dim(food_la)
+```
+
+number of times a county has a row
+```{r}
+county_count <- table(food_la$County)
+county_count
+```
+
+```{r}
+summarize(food_la,mean(PovertyRate))
+```
+
+avergae poverty rate for each LA county
+```{r}
+food_county <- group_by(food_la,County)
+avg_poverty <- summarize(food_county,avg= mean(PovertyRate,na.rm=TRUE))
+avg_poverty
+```
+
+average median family income for each LA county
+```{r}
+avg_income <- summarize(food_county,avg= mean(MedianFamilyIncome,na.rm=TRUE))
+avg_income
+```
+
+
+```{r}
+avg_pop <- summarize(food_county,avg= mean(POP2010,na.rm=TRUE))
+avg_pop
+```
+
+LAPOP1_10
+LAPOP05_10
+LAPOP1_20
+LALOWI1_10
+LALOWI05_10
+LALOWI1_20
+
+
+```{r}
+avg_LAPOP1_10 <- summarize(food_county,avg= mean(LAPOP1_10,na.rm=TRUE))
+avg_LAPOP05_10 <- summarize(food_county,avg= mean(LAPOP05_10,na.rm=TRUE))
+avg_LAPOP1_20 <- summarize(food_county,avg= mean(LAPOP1_20,na.rm=TRUE))
+avg_LALOWI1_10 <- summarize(food_county,avg= mean(LALOWI1_10,na.rm=TRUE))
+avg_LALOWI05_10 <- summarize(food_county,avg= mean(LALOWI05_10,na.rm=TRUE))
+avg_LALOWI1_20 <- summarize(food_county,avg= mean(LALOWI1_20,na.rm=TRUE))
+
+avg_LAPOP1_10
+avg_LAPOP05_10
+avg_LAPOP1_20 
+avg_LALOWI1_10
+avg_LALOWI05_10
+avg_LALOWI1_20
+```
+
+plotting average income by county
+```{r}
+ggplot(avg_income, aes(avg, County)) +
+ #geom_point(aes(color = LILATracts_Vehicle)) 
+  geom_point(aes(color = County))
+```
+
+
+variables flagged for food desert:
+LILATracts_1And10
+LILATracts_halfAnd10
+LILATracts_1And20
+LILATracts_Vehicle
+
+
+relation b/w income and poverty, flagged by vehicular acces
+```{r}
+ggplot(food_la, aes(MedianFamilyIncome, PovertyRate)) +
+ geom_point(aes(color = LILATracts_Vehicle)) 
+```
+
+same as above but coloured by county
+```{r}
+ggplot(food_la, aes(MedianFamilyIncome, PovertyRate)) +
+ geom_point(aes(color = County)) 
+```
+
+
+low access and poverty rate
+
+LAPOP1_10
+LAPOP05_10
+LAPOP1_20
+LALOWI1_10
+LALOWI05_10
+LALOWI1_20
+-----------------
+
+lapophalf
+lalowihalf
+lawhitehalf
+lablackhalf
+lahisphalf
+------------------
+lapop1
+lalowi1
+lawhite1
+lablack1
+lahisp1
+----------------
+
+lapop10
+lalowi10
+lawhite10
+lablack10
+lahisp10
+----------------------
+lapop20: Low access, population at 20 miles, number
+lalowi20: Low access, low-income population at 20 miles, number
+lawhite20: Low access, White population at 20 miles, number
+lablack20: Low access, Black or African American population at 20 miles, number
+lahisp20: Low access, Hispanic or Latino population at 20 miles, number
+
+
+
+```{r}
+#counties from MLR
+counties <- c("Assumption", "Cameron", "East Feliciana","Iberville",  "La Salle", "Red River", "West Baton Rouge")
+
+#filter
+mlr_counties <- food_la %>%
+  filter(County %in% counties)
+
+
+#adding columns calculating pct of a pop away from supermarket
+mlr_counties <- mlr_counties %>%
+  #add the overall low acess and low acees low income for urban and rural pops
+  mutate(LAPOP1_10_pct = 100*(LAPOP1_10/POP2010), LAPOP05_10_pct = 100*(LAPOP05_10/POP2010), LAPOP1_20_pct = 100*(LAPOP1_20/POP2010), LALOWI1_10_pct = 100*(LALOWI1_10/POP2010), LALOWI05_10_pct = 100*(LALOWI05_10/POP2010), LALOWI1_20_pct = 100*(LALOWI1_20/POP2010),
+  
+  #individual diantces for low access
+  lapophalf_pct = 100*(lapophalf/POP2010), lapop1_pct = 100*(lapop1/POP2010), lapop10_pct = 100*(lapop10/POP2010), lapop20_pct = 100*(lapop20/POP2010),
+  
+  #individual distances for low access, low income people
+  lalowihalf_pct = 100*(lalowihalf/POP2010), lalowi1_pct = 100*(lalowi1/POP2010), lalowi10_pct = 100*(lalowi10/POP2010), lalowi20_pct = 100*(lalowi20/POP2010),
+  #distances for racial demographics
+  #1/2 mile: lawhitehalf, lablackhalf, lahisphalf
+  lawhitehalf_pct = 100*(lawhitehalf/POP2010), lablackhalf_pct = 100*(lablackhalf/POP2010), lahisphalf_pct = 100*(lahisphalf/POP2010),
+  
+  #1 mile: lawhite1, lablack1, lahisp1
+  lawhite1_pct = 100*(lawhite1/POP2010), lablack1_pct = 100*(lablack1/POP2010), lahisp1_pct = 100*(lahisp1/POP2010),
+  
+  #10 mile: lawhite10, lablack10, lahisp10
+  lawhite10_pct = 100*(lawhite10/POP2010), lablack10_pct = 100*(lablack10/POP2010), lahisp10_pct = 100*(lahisp10/POP2010),
+  
+  #20 mile:
+  lawhite20_pct = 100*(lawhite20/POP2010), lablack20_pct = 100*(lablack20/POP2010), lahisp20_pct = 100*(lahisp20/POP2010)) 
+
+```
+
+```{r}
+dim(mlr_counties) #31 153 to confirm change
+```
+
+
+```{r}
+count <- table(mlr_counties$County)
+count
+```
+
+avg poverty for each county
+```{r}
+food_county <- group_by(mlr_counties, County)
+avg_poverty <- summarize(food_county,avg= mean(PovertyRate,na.rm=TRUE))
+avg_poverty
+```
+
+avg income for each county
+```{r}
+avg_income <- summarize(food_county,avg= mean(MedianFamilyIncome,na.rm=TRUE))
+avg_income
+```
+
+avg pop for counties
+```{r}
+avg_pop <- summarize(food_county,avg= mean(POP2010,na.rm=TRUE))
+avg_pop
+```
+
+LAPOP1_10
+LAPOP05_10
+LAPOP1_20
+LALOWI1_10
+LALOWI05_10
+LALOWI1_20
+
+calculate averages for rural/urban distnaces
+
+```{r}
+avg_LAPOP1_10 <- summarize(food_county,avg= mean(LAPOP1_10_pct,na.rm=TRUE))
+avg_LAPOP05_10 <- summarize(food_county,avg= mean(LAPOP05_10_pct,na.rm=TRUE))
+avg_LAPOP1_20 <- summarize(food_county,avg= mean(LAPOP1_20_pct,na.rm=TRUE))
+avg_LALOWI1_10 <- summarize(food_county,avg= mean(LALOWI1_10_pct,na.rm=TRUE))
+avg_LALOWI05_10 <- summarize(food_county,avg= mean(LALOWI05_10_pct,na.rm=TRUE))
+avg_LALOWI1_20 <- summarize(food_county,avg= mean(LALOWI1_20_pct,na.rm=TRUE))
+
+avg_LAPOP1_10
+avg_LAPOP05_10
+avg_LAPOP1_20 
+avg_LALOWI1_10
+avg_LALOWI05_10
+avg_LALOWI1_20
+```
+
+#plot avg income
+```{r}
+ggplot(avg_income, aes(factor(County), avg, fill = factor(County))) +
+ #geom_point(aes(color = LILATracts_Vehicle)) 
+  #geom_point(aes(color = County))
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Dark2")
+```
+
+#plot avg poverty
+```{r}
+ggplot(avg_poverty, aes(factor(County), avg, fill = factor(County))) +
+ #geom_point(aes(color = LILATracts_Vehicle)) 
+  #geom_point(aes(color = County))
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Dark2")
+```
+
+avg_LAPOP1_10
+avg_LAPOP05_10
+avg_LAPOP1_20 
+avg_LALOWI1_10
+avg_LALOWI05_10
+avg_LALOWI1_20
+
+plot low access pop count at different urban/rural distances
+
+```{r}
+ggplot(avg_LAPOP1_10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population count at 1 mile (urban) and 10 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_LAPOP05_10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population count at 1/2 mile (urban) and 10 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_LAPOP1_20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population count at 1 mile (urban) and 20 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_LALOWI1_10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population count at 1 mile (urban) and 10 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_LALOWI05_10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population count at 1/2 mile (urban) and 10 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_LALOWI1_20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population count at 1 mile (urban) and 20 miles (rural)")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+```
+
+
+
+
+lapophalf
+lapop1
+lapop10
+lapop20: Low access, population at 20 miles, number
+
+average for just low access at different distances
+```{r}
+#low access at at 1/2, 1 mile, 10 miles and 20 miles from grocery store
+avg_lapophalf <- summarize(food_county,avg= mean(lapophalf_pct,na.rm=TRUE))
+avg_lapop1 <- summarize(food_county,avg= mean(lapop1_pct,na.rm=TRUE))
+avg_lapop10 <- summarize(food_county,avg= mean(lapop10_pct,na.rm=TRUE))
+avg_lapop20 <- summarize(food_county,avg= mean(lapop20_pct,na.rm=TRUE))
+
+avg_lapophalf
+avg_lapop1
+avg_lapop10 
+avg_lapop20
+```
+
+use above avergaes for plots
+```{r}
+ggplot(avg_lapophalf, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population beyond 1/2 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lapop1, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population beyond 1 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lapop10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population beyond 10 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lapop20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access population beyond 20 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+
+lalowihalf
+lalowi1
+lalowi10
+lalowi20: Low access, low-income population at 20 miles, number
+
+```{r}
+#low access, low income at 1/2, 1 mile, 10 miles and 20 miles from grocery store
+avg_lalowihalf <- summarize(food_county,avg= mean(lalowihalf_pct,na.rm=TRUE))
+avg_lalowi1 <- summarize(food_county,avg= mean(lalowi1_pct,na.rm=TRUE))
+avg_lalowi10 <- summarize(food_county,avg= mean(lalowi10_pct,na.rm=TRUE))
+avg_lalowi20 <- summarize(food_county,avg= mean(lalowi20_pct,na.rm=TRUE))
+
+avg_lalowihalf
+avg_lalowi1 
+avg_lalowi10
+avg_lalowi20
+```
+
+avg from above for low acc, low income plots
+
+```{r}
+ggplot(avg_lalowihalf, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population beyond 1/2 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lalowi1, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population beyond 1 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lalowi10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population beyond 10 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lalowi20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access, low income population beyond 20 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+lawhitehalf
+lablackhalf
+lahisphalf
+```{r}
+#races at 1/2 mile from grocery store
+avg_lawhitehalf <- summarize(food_county,avg= mean(lawhitehalf_pct,na.rm=TRUE))
+avg_lablackhalf <- summarize(food_county,avg= mean(lablackhalf_pct,na.rm=TRUE))
+avg_lahisphalf <- summarize(food_county,avg= mean(lahisphalf_pct,na.rm=TRUE))
+
+
+avg_lawhitehalf
+avg_lablackhalf
+avg_lahisphalf
+```
+
+```{r}
+ggplot(avg_lawhitehalf, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access white population beyond 1/2 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lablackhalf, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access black population beyond 1/2 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lahisphalf, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access hispanic population beyond 1/2 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+
+lawhite1
+lablack1
+lahisp1
+```{r}
+#races at 1 mile from grocery store
+avg_lawhite1 <- summarize(food_county,avg= mean(lawhite1_pct,na.rm=TRUE))
+avg_lablack1 <- summarize(food_county,avg= mean(lablack1_pct,na.rm=TRUE))
+avg_lahisp1 <- summarize(food_county,avg= mean(lahisp1_pct,na.rm=TRUE))
+
+
+avg_lawhite1
+avg_lablack1
+avg_lahisp1
+```
+
+```{r}
+ggplot(avg_lawhite1, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access white population beyond 1 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lablack1, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access black population beyond 1 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lahisp1, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access hispanic population beyond 1 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+lawhite10
+lablack10
+lahisp10
+
+```{r}
+#races at 10 mile from grocery store
+avg_lawhite10 <- summarize(food_county,avg= mean(lawhite10_pct,na.rm=TRUE))
+avg_lablack10 <- summarize(food_county,avg= mean(lablack10_pct,na.rm=TRUE))
+avg_lahisp10 <- summarize(food_county,avg= mean(lahisp10_pct,na.rm=TRUE))
+
+
+avg_lawhite10
+avg_lablack10
+avg_lahisp10
+```
+
+
+```{r}
+ggplot(avg_lawhite10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access white population beyond 10 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lablack10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access black population beyond 10 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lahisp10, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access hispanic population beyond 10 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+lawhite20: Low access, White population at 20 miles, number
+lablack20: Low access, Black or African American population at 20 miles, number
+lahisp20: Low access, Hispanic or Latino population at 20 miles, number
+```{r}
+#races at 20 mile from grocery store
+avg_lawhite20 <- summarize(food_county,avg= mean(lawhite20_pct,na.rm=TRUE))
+avg_lablack20 <- summarize(food_county,avg= mean(lablack20_pct,na.rm=TRUE))
+avg_lahisp20 <- summarize(food_county,avg= mean(lahisp20_pct,na.rm=TRUE))
+
+
+avg_lawhite20
+avg_lablack20
+avg_lahisp20
+```
+
+```{r}
+ggplot(avg_lawhite20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access white population beyond 20 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lablack20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access black population beyond 20 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+
+ggplot(avg_lahisp20, aes(factor(County), avg, fill = factor(County))) +
+  geom_bar(stat = "identity")+
+        ggtitle("Average low access hispanic population beyond 20 mile from supermarket")+ 
+        #geom_text(aes(label = n_pct))+
+        labs(y = "Percentage", x = "")+
+        scale_fill_brewer(palette="Dark2")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank())
+```
+
+
+

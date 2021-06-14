@@ -1,0 +1,122 @@
+---
+title: "data exploration for rural counties"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(naniar)
+library(readr)
+```
+
+```{r}
+food <- read_csv("Food Access Research Atlas.csv")
+#obesity data frame from pre-processing in county health rankings
+```
+
+```{r}
+food_la <- food %>%
+  filter(food$State == "Louisiana")
+
+obesity_rural <- obesity %>%
+  filter(obesity$rural >= 50)
+
+obesity_urban <- obesity %>%
+  filter(obesity$rural <= 50)
+
+#rural_county <- (obesity_rural$County_name)
+
+#View(rural_county)
+```
+
+```{r}
+#from county health ranking data
+food_rural <- group_by(obesity_rural, County_name)
+food_urban <- group_by(obesity_urban, County_name)
+
+avg_poverty_rural <- summarize(food_rural, avg= mean(adult_obesity_percent,na.rm=TRUE))
+avg_poverty_urban <- summarize(food_urban, avg= mean(adult_obesity_percent,na.rm=TRUE))
+
+avg_poverty_rural
+avg_poverty_urban
+
+rural_county <- avg_poverty_rural$County_name
+urban_county <- avg_poverty_urban$County_name
+
+mean_poverty_rural <- mean(avg_poverty_rural$avg)
+mean_poverty_urban <- mean(avg_poverty_urban$avg)
+
+mean_poverty_rural
+mean_poverty_urban
+
+```
+
+```{r}
+#from food access data for rural counties
+ggplot(avg_poverty_rural, aes(factor(County_name), avg, fill = factor(County_name))) +
+  geom_bar(stat = "identity") + 
+  geom_hline(yintercept = mean(avg_poverty_rural$avg), color="black") 
+  #scale_fill_brewer(palette="Dark2")
+
+ggplot(avg_poverty_urban, aes(factor(County_name), avg, fill = factor(County_name))) +
+  geom_bar(stat = "identity") + 
+  geom_hline(yintercept = mean(avg_poverty_urban$avg), color="black")
+```
+
+```{r}
+access_rural <- c("Acadia", "Allen", "Avoyelles", "Beauregard", "Bienville", "Caldwell", "Cameron", "Catahoula", "Claiborne", "De Soto", "East Feliciana", "Evangeline", "Franklin", "Grant", "Iberville", "Jackson", "Jefferson Davis", "La Salle", "Livingston", "Morehouse", "Natchitoches", "Pointe Coupee", "Red River", "Richland", "Sabine", "St. Helena", "St. Martin", "Tangipahoa", "Tensas", "Union", "Vermillon", "Washington", "Webster", "West Carroll", "West Feliciana", "Winn")
+
+access_urban <- c("Acadia", "Ascension", "Assumption", "Bossier", "Caddo", "Calcasieu", "Concordia", "East Baton Rouge", "East Carroll", "Iberia", "Iberville", "Jefferson", "Jefferson Davis", "Lafayette", "Lafourche", "Lincoln", "Livingston", "Madison", "Morehouse", "Orleans", "Ouachita", "Plaquemines", "Rapides", "St. Bernard", "St. Charles", "St. James", "St. John the Baptist", "St. Landry", "St. Martin", "St. Mary", "St. Tammany", "Tangipahoa", "Terrebonne", "Vernon", "West Baton Rouge")
+
+food_rural_data <- food_la %>%
+  filter(food_la$County %in% access_rural)
+
+food_urban_data <- food_la %>%
+  filter(food_la$County %in% access_urban)
+
+rural_access <- group_by(food_rural_data, County)
+urban_access <- group_by(food_urban_data, County)
+
+avg_poverty_rural <- summarize(rural_access, avg= mean(PovertyRate,na.rm=TRUE))
+avg_poverty_urban <- summarize(urban_access, avg= mean(PovertyRate,na.rm=TRUE))
+
+ggplot(avg_poverty_rural, aes(factor(County), avg, fill = factor(County)))+
+  geom_bar(stat = "identity")+ 
+  geom_hline(yintercept = mean(food_rural_data$PovertyRate), color="black") 
+
+ggplot(avg_poverty_urban, aes(factor(County), avg, fill = factor(County)))+
+  geom_bar(stat = "identity")+ 
+  geom_hline(yintercept = mean(food_urban_data$PovertyRate), color="black") 
+
+mean(food_rural_data$PovertyRate)
+mean(food_urban_data$PovertyRate)
+```
+
+
+do plots for food access and access by race for urban and rural
+```{r}
+avg_poverty_rural <- summarize(rural_access, avg= mean(PovertyRate,na.rm=TRUE))
+avg_poverty_urban <- summarize(urban_access, avg= mean(PovertyRate,na.rm=TRUE))
+
+ggplot(avg_poverty_rural, aes(factor(County), avg, fill = factor(County)))+
+  geom_bar(stat = "identity")+ 
+  geom_hline(yintercept = mean(food_rural_data$PovertyRate), color="black") 
+
+ggplot(avg_poverty_urban, aes(factor(County), avg, fill = factor(County)))+
+  geom_bar(stat = "identity")+ 
+  geom_hline(yintercept = mean(food_urban_data$PovertyRate), color="black") 
+
+mean(food_rural_data$PovertyRate)
+mean(food_urban_data$PovertyRate)
+```
+
+```{r}
+View(rural_access)
+```
+
