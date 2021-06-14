@@ -1,0 +1,39 @@
+---
+title: "counties with high obesity"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+```
+
+```{r}
+high_obs <- obesity %>%
+  filter(adult_obesity_percent >= 35)
+
+#high_obs$County_name
+
+high_obs_counties <- group_by(high_obs, County_name)
+
+avg_obs <- summarize(high_obs_counties,avg= mean(adult_obesity_percent,na.rm=TRUE))
+avg_food_ind <- summarize(high_obs_counties,avg= mean(food_env_index,na.rm=TRUE))
+
+avg_obs
+avg_food_ind
+
+nrow(avg_obs)
+```
+
+```{r}
+ggplot(avg_obs, aes(factor(County_name), avg, fill = factor(County_name)))+
+  geom_bar(stat = "identity")+ 
+  geom_hline(yintercept = mean(obesity$adult_obesity_percent), color="black") 
+```
+
